@@ -1,9 +1,10 @@
 INCLDS = -I includes
-all: server client
-
+all: obj/aurrasd.o bin/aurrasd  obj/aurras.o bin/aurras
 server: obj/aurrasd.o bin/aurrasd
-
+	./bin/aurrasd etc/aurrasd.conf bin/aurrasd-filters
 client: obj/aurras.o bin/aurras
+	./bin/aurras status
+
 
 bin/aurrasd: obj/aurrasd.o obj/utilities.o obj/filters.o
 	gcc -g $(INCLDS) obj/aurrasd.o obj/utilities.o obj/filters.o -o bin/aurrasd
@@ -11,7 +12,7 @@ bin/aurrasd: obj/aurrasd.o obj/utilities.o obj/filters.o
 obj/aurrasd.o: src/aurrasd.c
 	gcc -Wall $(INCLDS) -g -c src/aurrasd.c -o obj/aurrasd.o
 
-bin/aurras: obj/aurras.o obj/utilities.o filters.o
+bin/aurras: obj/aurras.o obj/utilities.o obj/filters.o
 	gcc -g $(INCLDS) obj/aurras.o obj/utilities.o obj/filters.o -o bin/aurras
 
 obj/aurras.o: src/aurras.c

@@ -14,5 +14,5 @@ typedef struct fltrs {
     int max_size;  // Max number of filters
 } * FILTERS;
 FILTERS fill_filters(char* config_file_path);
-void print_filter(FILTERS fs);
+char* status(FILTERS fs);
 #endif

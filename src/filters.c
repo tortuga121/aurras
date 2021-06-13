@@ -22,6 +22,7 @@ FILTERS init_filters(int n_filters) {
     fs->fltr = malloc(sizeof(struct fltr) * n_filters);
     fs->size = 0;
     fs->max_size = n_filters;
+    // initializing with null
     for(int i = 0; i < n_filters; i++) fs->fltr[i] = NULL;
     return fs;
 }
@@ -47,12 +48,31 @@ FILTERS fill_filters(char* config_file_path) {
     char *line = malloc(LINE_SIZE);
     read(fd,line,LINE_SIZE);
     for(int i = 0; i < n_filters ; i++) {
-        filter f = line_to_filter(strsep(&line,"\n"));
+        filter f = line_to_filter(strsep(&line,"\n\0"));
         add_filter(fs, f);
     }
     return fs;
 }
-void print_filter(FILTERS fs) {
-    for(int i = 0; i < fs->size; i++)
-        printf("nome: %s exec: %s capacidade: %d\n",fs->fltr[i]->name,fs->fltr[i]->path,fs->fltr[i]->max);
+// returns string of the filter status
+char* filter_status(filter f) {
+    char line[LINE_SIZE] = "";
+    strcat(line,"filter ");
+    strcat(line,f->name);
+    strcat(line,":");
+    strcat(line," ");
+    char number[20];
+    sprintf(number,"%d/%d ",f->used,f->max);
+    strcat(line,number);
+    strcat(line,"running/max\n");
+    return strdup(line);
+}
+// returns string of the filters status
+char* status(FILTERS fs) {
+    char line[2048] = "";
+    for(int i = 0; i < fs->size; i++){ 
+        char* fstatus = filter_status(fs->fltr[i]);
+        strcat(line,fstatus);
+        free(fstatus);
+    }
+    return strdup(line);
 }
