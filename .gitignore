@@ -59,3 +59,8 @@ dkms.conf
 # End of https://www.toptal.com/developers/gitignore/api/c
 
 enunciado.pdf
+.idea
+bin
+cmake-buil-debug
+cmake-build-debug/
+CMakeLists.txt
