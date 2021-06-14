@@ -71,7 +71,7 @@ int exec_transform(char** args, FILTERS fs) {
             close(fd[0]);
             close(fd[1]);
             waitpid(pid_child, &status, 0);
-            if (WEXITSTATUS(stat) == -1) return -1;
+            if (WEXITSTATUS(&status) == -1) return -1;
         }
     }
     if (fork() == 0) {
