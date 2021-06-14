@@ -15,4 +15,5 @@ typedef struct fltrs {
 } * FILTERS;
 FILTERS fill_filters(char* config_file_path);
 char* status(FILTERS fs);
+int can_transform(FILTERS fs, char **filters);
 #endif

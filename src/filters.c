@@ -3,7 +3,7 @@
 filter line_to_filter(char* line) {
     filter f = malloc(sizeof(struct fltr));
     f->name = strdup(strsep(&line, " "));
-    f->path = strdup(strsep(&line, " "));
+    f->path = strdup(strcat("bin/aurrasd-filters/",strsep(&line, " ")));
     f->used = 0;
     f->max = (int)strtol(line, NULL, 10);
     if (f->name && f->name[0] && f->path && f->path[0]) return f;
@@ -75,4 +75,22 @@ char* status(FILTERS fs) {
         free(fstatus);
     }
     return strdup(line);
+}
+//check if filter is available
+int is_available(filter f) {
+    if(f == NULL) return 0;
+    return f->used < f->max;
+}
+filter find_filter(char* filter_name, FILTERS fs){
+    for(int i = 0; i < fs->size; i++)
+        if(!strcmp(fs->fltr[i]->name,filter_name))
+            return fs->fltr[i];
+    write(1,"filter not found\n", strlen("filter not found\n"));
+    return NULL;
+}
+int can_transform(FILTERS fs, char **filters) {
+    for(int i = 0; i < fs->size; i++)
+        if(!is_available(find_filter(filters[i],fs)))
+            return 0;
+    return 1;
 }

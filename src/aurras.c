@@ -10,14 +10,15 @@ int main(int argc, char **argv) {
     if (fifo_ret == -1 && errno != EEXIST) {
         perror(CLIENT_TO_SERVER);
     }
-
-    if (!strcmp(argv[1], "status")) {
-        // write command to server
+    // open write to server
         int fd_write = open(CLIENT_TO_SERVER, O_WRONLY, 0666);
         if(fd_write == -1) {
             perror(CLIENT_TO_SERVER);
             return -1;
-        } // write command to server
+        }
+
+    if (!strcmp(argv[1], "status")) {
+         // write command to server
         write(fd_write,argv[1],strlen(argv[1]));
         close(fd_write);
         //open fifo client to server 
@@ -30,6 +31,14 @@ int main(int argc, char **argv) {
         close(fd_read);
     }
     else if(!strcmp(argv[1], "transform")) {
+        char command[COMMAND_SIZE] = "";
+        for(int i = 1; i < argc; i++){ 
+            strcat(command,argv[i]);
+            strcat(command," ");
+        }
+        // write command to server
+        write(fd_write,command,strlen(command));
+        close(fd_write);
 
     }
 
