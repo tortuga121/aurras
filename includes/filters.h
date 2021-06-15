@@ -19,4 +19,5 @@ char* status(FILTERS fs);
 int can_transform(FILTERS fs, char **filters);
 void ocup_filter(FILTERS fs, char *f_name);
 void free_filter(FILTERS fs, char *f_name);
+filter find_filter(char* filter_name, FILTERS fs);
 #endif

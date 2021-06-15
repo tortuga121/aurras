@@ -32,38 +32,34 @@ int exec_status() {
 }
 
 int exec_transform(char** args) {
-    if (!can_transform(fs, args + 2)) return -1;
-    char* audio_in = args[0];   // sample name
-    char* audio_out = args[1];  // sample result name
+    if (!can_transform(fs, args + 4)) return -1;
+    char* audio_in = args[2];   // sample name
+    char* audio_out = args[3];  // sample result name
     //open sample
     int f_in = open(audio_in, O_RDONLY, 0666);
     if (f_in == -1) {
-        perror(audio_in);
         return -1;
     }
     // open result
-    int f_out = open(audio_out, O_CREAT | O_WRONLY, 0666);
+    int f_out = open(audio_out, O_CREAT | O_WRONLY | O_TRUNC, 0666);
     if (f_in == -1) {
-        perror(audio_out);
         return -1;
     }
     dup2(f_in,0);
     dup2(f_out,1);
     int fd[2];
-    int status;
-    int i;
-    for (i = 2; i < MAX_ARGS && args[i + 1]; i++) {
+    int i = 4;
+    for (; i < MAX_ARGS && args[i+1]; i++) {
         if (pipe(fd) == -1) {
-            perror("pipe");
             return -1;
         }
+        filter f = find_filter(args[i],fs);
         int pid_child = fork();
         if (pid_child == 0) {
             dup2(fd[1], 1);
             close(fd[1]);
             close(fd[0]);
-            if (execl(fs->fltr[i]->path, fs->fltr[i]->path, NULL)) {
-                perror("Filter Failed");
+            if (execl(f->path, f->path, NULL)) {
                _exit(-1);
             }
 
@@ -73,33 +69,41 @@ int exec_transform(char** args) {
             close(fd[1]);
         }
     }
-    if (fork() == 0) {
-        if (execl(fs->fltr[i]->path, fs->fltr[i]->path, NULL)) {
-            perror("Filter Failed");
-            return -1;
+    pid_t pid;
+    filter f = find_filter(args[i],fs);
+    if ((pid = fork()) == 0) {
+        if (execl(f->path, f->path, NULL)) {
+            _exit(-1);
         }
+    }
+    else {
+        int status;
+        waitpid(pid,&status,0);
+        return WEXITSTATUS(status);
     }
     return 0;
 }
 int exec_command(char* command) {
     char** args = divide_command(command);
     if (!args) return -1;
-    if (*args && !strcmp(args[2], "status")) {
-        exec_status(fs);
-    } else if (*args && !strcmp(args[2], "transform")) { 
+    if (*args && !strcmp(args[1], "status")) {
+        exec_status();
+    } else if (*args && !strcmp(args[1], "transform")) { 
         //ocupy filters
-        for(int i = 3; args[i]; i++) ocup_filter(fs,args[i]);
-        if(fork() == 0) {
+        for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
+        exec_transform(args);
+        /*if(fork() == 0) {
             pid_t pid;
             if((pid = fork()) == 0) { 
-                _exit(exec_transform(args+2));
+                _exit(exec_transform(args));
             }
+            
             int status;
-            waitpid(pid,&status,args[1]);
+            waitpid(pid,&status,0);
             if(WEXITSTATUS(status)) 
-                kill(args[0],SIGUSR1);
-            else kill(args[0],SIGUSR2);
-        }
+                kill(atoi(args[0]),SIGUSR1);
+            else kill(atoi(args[0]),SIGUSR2);
+        }*/
     }
     return 0;
 }

@@ -86,11 +86,12 @@ filter find_filter(char* filter_name, FILTERS fs){
     for(int i = 0; i < fs->size; i++)
         if(!strcmp(fs->fltr[i]->name,filter_name))
             return fs->fltr[i];
-    write(1,"filter not found\n", strlen("filter not found\n"));
+    
+    write(1,filter_name, strlen(filter_name));
     return NULL;
 }
 int can_transform(FILTERS fs, char **filters) {
-    for(int i = 0; i < fs->size; i++)
+    for(int i = 0; i < fs->size && filters[i]; i++)
         if(is_available(find_filter(filters[i],fs)))
             return 1;
     return 0;
