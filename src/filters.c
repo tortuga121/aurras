@@ -91,7 +91,7 @@ filter find_filter(char* filter_name, FILTERS fs){
 }
 int can_transform(FILTERS fs, char **filters) {
     for(int i = 0; i < fs->size; i++)
-        if(!is_available(find_filter(filters[i],fs)))
-            return 0;
-    return 1;
+        if(is_available(find_filter(filters[i],fs)))
+            return 1;
+    return 0;
 }

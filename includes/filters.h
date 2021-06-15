@@ -13,6 +13,7 @@ typedef struct fltrs {
     int size;      // Number of filters
     int max_size;  // Max number of filters
 } * FILTERS;
+
 FILTERS fill_filters(char* config_file_path);
 char* status(FILTERS fs);
 int can_transform(FILTERS fs, char **filters);
