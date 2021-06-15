@@ -17,4 +17,6 @@ typedef struct fltrs {
 FILTERS fill_filters(char* config_file_path);
 char* status(FILTERS fs);
 int can_transform(FILTERS fs, char **filters);
+void ocup_filter(FILTERS fs, char *f_name);
+void free_filter(FILTERS fs, char *f_name);
 #endif

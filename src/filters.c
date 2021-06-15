@@ -95,3 +95,11 @@ int can_transform(FILTERS fs, char **filters) {
             return 1;
     return 0;
 }
+void ocup_filter(FILTERS fs, char *f_name) {
+    filter f = find_filter(f_name,fs);
+    if(f->used < f->max)f->used++;
+}
+void free_filter(FILTERS fs, char *f_name) {
+    filter f = find_filter(f_name,fs);
+    if(f->used > 0) f->used--;
+}

@@ -32,6 +32,10 @@ int main(int argc, char **argv) {
     }
     else if(!strcmp(argv[1], "transform")) {
         char command[COMMAND_SIZE] = "";
+        char pid[32] = "";
+        sprintf(pid,"%d",getpid());
+        strcat(command,pid);
+        strcat(command," ");
         for(int i = 1; i < argc; i++){ 
             strcat(command,argv[i]);
             strcat(command," ");

@@ -1,5 +1,6 @@
 #include "filters.h"
 #include "utilities.h"
+FILTERS fs;
 char** divide_command(char* command) {
     char** params = malloc(sizeof(char*) * 16);
     // test if malloc failed
@@ -18,7 +19,7 @@ char** divide_command(char* command) {
     }
     return params;
 }
-int exec_status(FILTERS fs) {
+int exec_status() {
     int fd = open(SERVER_TO_CLIENT, O_WRONLY, 0777);
     if (fd == -1 && errno != EEXIST) {
         perror(SERVER_TO_CLIENT);
@@ -30,7 +31,7 @@ int exec_status(FILTERS fs) {
     return 0;
 }
 
-int exec_transform(char** args, FILTERS fs) {
+int exec_transform(char** args) {
     if (!can_transform(fs, args + 2)) return -1;
     char* audio_in = args[0];   // sample name
     char* audio_out = args[1];  // sample result name
@@ -80,20 +81,32 @@ int exec_transform(char** args, FILTERS fs) {
     }
     return 0;
 }
-int exec_command(char* command, FILTERS fs) {
+int exec_command(char* command) {
     char** args = divide_command(command);
     if (!args) return -1;
-    if (*args && !strcmp(args[0], "status")) {
+    if (*args && !strcmp(args[2], "status")) {
         exec_status(fs);
-    } else if (*args && !strcmp(args[0], "transform"))
-        if (exec_transform(args + 1, fs))
-            write(1, "transform failed!\n", strlen("transform failed!\n"));
+    } else if (*args && !strcmp(args[2], "transform")) { 
+        //ocupy filters
+        for(int i = 3; args[i]; i++) ocup_filter(fs,args[i]);
+        if(fork() == 0) {
+            pid_t pid;
+            if((pid = fork()) == 0) { 
+                _exit(exec_transform(args+2));
+            }
+            int status;
+            waitpid(pid,&status,args[1]);
+            if(WEXITSTATUS(status)) 
+                kill(args[0],SIGUSR1);
+            else kill(args[0],SIGUSR2);
+        }
+    }
     return 0;
 }
 int main(int argc, char** argv) {
     if (argc < 3) perror_invalid_args();
 
-    FILTERS fs = fill_filters(argv[1]);
+    fs = fill_filters(argv[1]);
     if (fs == NULL) return -1;
 
     int fifo_ret = mkfifo(SERVER_TO_CLIENT, 0666);
@@ -107,7 +120,7 @@ int main(int argc, char** argv) {
         char command[COMMAND_SIZE];
         ssize_t bytes = read(fd, command, COMMAND_SIZE);
         if (bytes > 0)
-            exec_command(command, fs);
+            exec_command(command);
     }
     return 0;
 }
