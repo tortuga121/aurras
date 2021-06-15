@@ -3,7 +3,8 @@
 filter line_to_filter(char* line) {
     filter f = malloc(sizeof(struct fltr));
     f->name = strdup(strsep(&line, " "));
-    f->path = strdup(strcat("bin/aurrasd-filters/",strsep(&line, " ")));
+    char path[LINE_SIZE] = "bin/aurrasd-filters/";
+    f->path = strdup(strcat(path,strsep(&line, " ")));
     f->used = 0;
     f->max = (int)strtol(line, NULL, 10);
     if (f->name && f->name[0] && f->path && f->path[0]) return f;

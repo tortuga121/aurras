@@ -70,8 +70,6 @@ int exec_transform(char** args, FILTERS fs) {
             dup2(fd[0], 0);
             close(fd[0]);
             close(fd[1]);
-            waitpid(pid_child, &status, 0);
-            if (WEXITSTATUS(status) == -1) return -1;
         }
     }
     if (fork() == 0) {
