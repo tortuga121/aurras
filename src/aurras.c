@@ -7,8 +7,8 @@ void transform_sucess(int signal) {
 }
 int main(int argc, char **argv) {
     //
-    signal(SIGUSR2,tranform_error);
-    signal(SIGUSR1,transform_sucess);
+    signal(SIGUSR1,tranform_error);
+    signal(SIGUSR2,transform_sucess);
     if (argc < 2 && strcmp(argv[1], "status") && strcmp(argv[1], "transform")) {
         perror_invalid_args();
         return -1;
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
         // write command to server
         write(fd_write,command,strlen(command));
         close(fd_write);
-        //pause();
+        pause();
 
     }
 

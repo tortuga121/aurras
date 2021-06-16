@@ -91,8 +91,8 @@ int exec_command(char* command) {
     } else if (*args && !strcmp(args[1], "transform")) { 
         //ocupy filters
         //for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
-        exec_transform(args);
-        /*if(fork() == 0) {
+       
+        if(fork() == 0) {
             pid_t pid;
             if((pid = fork()) == 0) { 
                 _exit(exec_transform(args));
@@ -103,7 +103,7 @@ int exec_command(char* command) {
             if(WEXITSTATUS(status)) 
                 kill(atoi(args[0]),SIGUSR1);
             else kill(atoi(args[0]),SIGUSR2);
-        }*/
+        }
     }
     return 0;
 }
