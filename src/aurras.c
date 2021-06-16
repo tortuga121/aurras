@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
         // write command to server
         write(fd_write,command,strlen(command));
         close(fd_write);
-        pause();
+        //pause();
 
     }
 

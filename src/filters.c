@@ -92,9 +92,9 @@ filter find_filter(char* filter_name, FILTERS fs){
 }
 int can_transform(FILTERS fs, char **filters) {
     for(int i = 0; i < fs->size && filters[i]; i++)
-        if(is_available(find_filter(filters[i],fs)))
-            return 1;
-    return 0;
+        if(!is_available(find_filter(filters[i],fs)))
+            return 0;
+    return 1;
 }
 void ocup_filter(FILTERS fs, char *f_name) {
     filter f = find_filter(f_name,fs);

@@ -14,7 +14,7 @@ char** divide_command(char* command) {
 
     for (int i = 0; i < MAX_ARGS && command; i++) {
         char* arg = strsep(&command, " \n");
-        if (!(arg && *arg)) continue;  // in case of empty string
+        if (!(arg && *arg && strlen(arg)>1)) continue;  // in case of empty string
         params[i] = strdup(arg);
     }
     return params;
@@ -90,7 +90,7 @@ int exec_command(char* command) {
         exec_status();
     } else if (*args && !strcmp(args[1], "transform")) { 
         //ocupy filters
-        for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
+        //for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
         exec_transform(args);
         /*if(fork() == 0) {
             pid_t pid;
