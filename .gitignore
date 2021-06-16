@@ -64,3 +64,4 @@ bin
 cmake-buil-debug
 cmake-build-debug/
 CMakeLists.txt
+bin
