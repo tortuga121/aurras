@@ -73,7 +73,6 @@ char* status(FILTERS fs) {
     for(int i = 0; i < fs->size; i++){ 
         char* fstatus = filter_status(fs->fltr[i]);
         strcat(line,fstatus);
-        free(fstatus);
     }
     return strdup(line);
 }
@@ -98,9 +97,11 @@ int can_transform(FILTERS fs, char **filters) {
 }
 void ocup_filter(FILTERS fs, char *f_name) {
     filter f = find_filter(f_name,fs);
-    if(f->used < f->max)f->used++;
+    if(f->used < f->max)f->used = f->used + 1;
+    //printf("opcup %s %d\n",f->name,f->used);
 }
 void free_filter(FILTERS fs, char *f_name) {
     filter f = find_filter(f_name,fs);
-    if(f->used > 0) f->used--;
+    if(f->used > 0) f->used = f->used - 1;
+    //printf("free %s %d\n",f->name,f->used);
 }

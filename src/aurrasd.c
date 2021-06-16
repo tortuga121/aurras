@@ -1,5 +1,6 @@
 #include "filters.h"
 #include "utilities.h"
+#include <ctype.h>
 FILTERS fs;
 char** divide_command(char* command) {
     char** params = malloc(sizeof(char*) * 16);
@@ -13,8 +14,8 @@ char** divide_command(char* command) {
         params[i] = NULL;
 
     for (int i = 0; i < MAX_ARGS && command; i++) {
-        char* arg = strsep(&command, " \n");
-        if (!(arg && *arg && strlen(arg)>1)) continue;  // in case of empty string
+        char* arg = strsep(&command, " ");
+        if (!(arg && *arg )) continue;  // in case of empty string
         params[i] = strdup(arg);
     }
     return params;
@@ -32,7 +33,6 @@ int exec_status() {
 }
 
 int exec_transform(char** args) {
-    if (!can_transform(fs, args + 4)) return -1;
     char* audio_in = args[2];   // sample name
     char* audio_out = args[3];  // sample result name
     //open sample
@@ -86,11 +86,16 @@ int exec_transform(char** args) {
 int exec_command(char* command) {
     char** args = divide_command(command);
     if (!args) return -1;
-    if (*args && !strcmp(args[1], "status")) {
+    if (!strcmp(command, "status")) {
         exec_status();
-    } else if (*args && !strcmp(args[1], "transform")) { 
+    } 
+    else if(*args && !strcmp(args[0], "used")) {
+        for(int i = 5; args[i] ;i++) free_filter(fs,args[i]);
+    }
+    else if (*args && !strcmp(args[1], "transform")) { 
         //ocupy filters
-        //for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
+        if(!can_transform(fs,args+4)) return -1;
+        for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
        
         if(fork() == 0) {
             pid_t pid;
@@ -103,6 +108,7 @@ int exec_command(char* command) {
             if(WEXITSTATUS(status)) 
                 kill(atoi(args[0]),SIGUSR1);
             else kill(atoi(args[0]),SIGUSR2);
+            _exit(0);
         }
     }
     return 0;
@@ -121,7 +127,7 @@ int main(int argc, char** argv) {
     while (1) {
         // open fifo to read from client
         int fd = open(CLIENT_TO_SERVER, O_RDONLY, 0666);
-        char command[COMMAND_SIZE];
+        char command[COMMAND_SIZE] = "";
         ssize_t bytes = read(fd, command, COMMAND_SIZE);
         if (bytes > 0)
             exec_command(command);

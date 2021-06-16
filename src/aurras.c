@@ -1,12 +1,32 @@
 #include "utilities.h"
+char command[COMMAND_SIZE] = "";
+pid_t pid;
+
+void send_used_command() {
+    char usedcommand[COMMAND_SIZE] = "used ";
+    strcat(usedcommand,command);
+    int fd_write = open(CLIENT_TO_SERVER, O_WRONLY, 0666);
+    if(fd_write == -1) {
+        perror(CLIENT_TO_SERVER);
+        return;
+    }
+    int bytes = write(fd_write,usedcommand,strlen(usedcommand));
+    close(fd_write);
+}
 void tranform_error(int signal) {
     write(1,"transform failed\n",strlen("transform failed\n"));
+    send_used_command();
+    kill(pid,SIGKILL);
 }
 void transform_sucess(int signal) {
     write(1,"done\n",strlen("done\n"));
+    send_used_command();
+    kill(pid,SIGKILL);
 }
+
 int main(int argc, char **argv) {
     //
+    pid = getpid();
     signal(SIGUSR1,tranform_error);
     signal(SIGUSR2,transform_sucess);
     if (argc < 2 && strcmp(argv[1], "status") && strcmp(argv[1], "transform")) {
@@ -39,14 +59,12 @@ int main(int argc, char **argv) {
         close(fd_read);
     }
     else if(!strcmp(argv[1], "transform")) {
-        char command[COMMAND_SIZE] = "";
-        char pid[32] = "";
-        sprintf(pid,"%d",getpid());
-        strcat(command,pid);
-        strcat(command," ");
+        char pidstr[32] = "";
+        sprintf(pidstr,"%d",pid);
+        strcat(command,pidstr);
         for(int i = 1; i < argc; i++){ 
-            strcat(command,argv[i]);
             strcat(command," ");
+            strcat(command,argv[i]);
         }
         // write command to server
         write(fd_write,command,strlen(command));
