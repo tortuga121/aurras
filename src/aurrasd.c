@@ -48,7 +48,7 @@ int exec_transform(char** args) {
     }
     // open result
     int f_out = open(audio_out, O_CREAT | O_WRONLY | O_TRUNC, 0666);
-    if (f_in == -1) {
+    if (f_out == -1) {
         return -1;
     }
     dup2(f_in,0);
@@ -98,35 +98,43 @@ int exec_command(char* command) {
     } 
     else if(*args && !strcmp(args[0], "used")) {
         for(int i = 5; args[i] ;i++) free_filter(fs,args[i]);
-        int i;
         int j;
+        // remove from processing
         for(j = 0; j <= n_processing; j++) if(strstr(command,args[1])) break;
         for(int a = j; a <= n_processing; a++) processing[a] = processing[a+1];
         n_processing--;
+        // find pendings to start processing
+        int i = 0;
         do { 
-            for(i = 0; i < n_pending; i++) 
-                if(can_transform(fs,divide_command(pending[n_pending]+4))) break;
-            
+            for(; i < n_pending; i++) { 
+                char ** args = divide_command(strdup(pending[i]));
+                if(can_transform(fs,args+4)) break;
+            }
+           
             if(i < n_pending) { 
+                char* buf = strdup(pending[i]);
                 for(int j = i; j <= n_pending; j++) pending[i] = pending[i+1];
                 n_pending--;
+                exec_command(buf);
             }
-            exec_command(pending[n_pending]);
+            
         }while(i < n_pending);
         return 0;
     }
     else if (*args && !strcmp(args[1], "transform")) { 
-        //ocupy filters
+       //se if can transform otherwise add to pending list
         if(!can_transform(fs,args+4)){
             pending[n_pending++] = strdup(command); 
             printf("PENDING %s\n", command);
             return -1;
         }
+        // teel client that processing has started
         kill(atoi(args[0]),SIGPOLL);
+        // add to processing
         char buf[COMMAND_SIZE] = "";
         sprintf(buf,"task#%d %s\n",n_processing+1 ,command);
-
         processing[n_processing++] = strdup(buf);
+         //ocupy filters
         for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
         
         if(fork() == 0) {
@@ -137,6 +145,7 @@ int exec_command(char* command) {
             
             int status;
             waitpid(pid,&status,0);
+            // send signal to client with sucess transform or not
             if(WEXITSTATUS(status)) 
                 kill(atoi(args[0]),SIGUSR1);
             else kill(atoi(args[0]),SIGUSR2);
