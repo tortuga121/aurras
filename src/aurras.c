@@ -10,6 +10,7 @@ void send_used_command() {
         perror(CLIENT_TO_SERVER);
         return;
     }
+    strcat(usedcommand,"\n");
     int bytes = write(fd_write,usedcommand,strlen(usedcommand));
     close(fd_write);
 }
@@ -25,6 +26,7 @@ void transform_sucess(int signal) {
 }
 void h_processing(int signal) {
     write(1,"Processing...\n",strlen("Processing...\n"));
+    pause();
 }
 
 int main(int argc, char **argv) {
@@ -32,7 +34,7 @@ int main(int argc, char **argv) {
     pid = getpid();
     signal(SIGUSR1,tranform_error);
     signal(SIGUSR2,transform_sucess);
-    signal(SIGINT,h_processing);
+    signal(SIGPOLL,h_processing);
     if (argc < 2 && strcmp(argv[1], "status") && strcmp(argv[1], "transform")) {
         perror_invalid_args();
         return -1;
@@ -51,7 +53,9 @@ int main(int argc, char **argv) {
 
     if (!strcmp(argv[1], "status")) {
          // write command to server
-        write(fd_write,argv[1],strlen(argv[1]));
+        strcat(command,argv[1]);
+        strcat(command," \n");
+        write(fd_write,command,strlen(argv[1]));
         close(fd_write);
         //open fifo client to server 
         int fd_read = open(SERVER_TO_CLIENT,O_RDONLY,0666);
@@ -70,6 +74,7 @@ int main(int argc, char **argv) {
             strcat(command," ");
             strcat(command,argv[i]);
         }
+        strcat(command," \n");
         // write command to server
         write(fd_write,command,strlen(command));
         close(fd_write);

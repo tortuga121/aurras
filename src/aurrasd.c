@@ -2,9 +2,12 @@
 #include "utilities.h"
 #include <ctype.h>
 FILTERS fs;
-char **pending;
+char *pending[16];
 int n_pending;
+int n_processing;
+char *processing[16];
 char** divide_command(char* command) {
+    if(command == NULL) return NULL;
     char** params = malloc(sizeof(char*) * 16);
     // test if malloc failed
     if (params == NULL) {
@@ -16,7 +19,7 @@ char** divide_command(char* command) {
         params[i] = NULL;
 
     for (int i = 0; i < MAX_ARGS && command; i++) {
-        char* arg = strsep(&command, " ");
+        char* arg = strsep(&command, " \n");
         if (!(arg && *arg )) continue;  // in case of empty string
         params[i] = strdup(arg);
     }
@@ -30,6 +33,7 @@ int exec_status() {
     }
     char* out = status(fs);
     write(fd, out, strlen(out));
+    for(int i = 0; i< n_processing; i++) write(fd,processing[i], strlen(processing[i]));
     close(fd);
     return 0;
 }
@@ -86,18 +90,43 @@ int exec_transform(char** args) {
     return 0;
 }
 int exec_command(char* command) {
-    char** args = divide_command(command);
+    if(command == NULL) return -2;
+    char** args = divide_command(strdup(command));
     if (!args) return -2;
     if (!strcmp(command, "status")) {
         exec_status();
     } 
     else if(*args && !strcmp(args[0], "used")) {
         for(int i = 5; args[i] ;i++) free_filter(fs,args[i]);
+        int i;
+        int j;
+        for(j = 0; j <= n_processing; j++) if(strstr(command,args[1])) break;
+        for(int a = j; a <= n_processing; a++) processing[a] = processing[a+1];
+        n_processing--;
+        do { 
+            for(i = 0; i < n_pending; i++) 
+                if(can_transform(fs,divide_command(pending[n_pending]+4))) break;
+            
+            if(i < n_pending) { 
+                for(int j = i; j <= n_pending; j++) pending[i] = pending[i+1];
+                n_pending--;
+            }
+            exec_command(pending[n_pending]);
+        }while(i < n_pending);
+        return 0;
     }
     else if (*args && !strcmp(args[1], "transform")) { 
         //ocupy filters
-        if(!can_transform(fs,args+4)) return -1;
-        kill(args[0],SIGINT);
+        if(!can_transform(fs,args+4)){
+            pending[n_pending++] = strdup(command); 
+            printf("PENDING %s\n", command);
+            return -1;
+        }
+        kill(atoi(args[0]),SIGPOLL);
+        char buf[COMMAND_SIZE] = "";
+        sprintf(buf,"task#%d %s\n",n_processing+1 ,command);
+
+        processing[n_processing++] = strdup(buf);
         for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
         
         if(fork() == 0) {
@@ -122,8 +151,8 @@ int main(int argc, char** argv) {
     fs = fill_filters(argv[1]);
     if (fs == NULL) return -1;
     n_pending = 0;
-    pending = malloc(sizeof(char *)*16);
-    for(int i = 0; i < 16; i++) pending[i] = NULL;
+    n_processing = 0;
+    for(int i = 0; i < 16; i++) {pending[i] = NULL; processing[i] = NULL;}
     int fifo_ret = mkfifo(SERVER_TO_CLIENT, 0666);
     if (fifo_ret == -1 && errno != EEXIST) {
         perror(SERVER_TO_CLIENT);
@@ -132,10 +161,12 @@ int main(int argc, char** argv) {
     while (1) {
         // open fifo to read from client
         int fd = open(CLIENT_TO_SERVER, O_RDONLY, 0666);
-        char command[COMMAND_SIZE] = "";
+        char *command = malloc(COMMAND_SIZE);
         ssize_t bytes = read(fd, command, COMMAND_SIZE);
-        if (bytes > 0 && exec_command(command) == -1)
-            pending[n_pending++] = strdup(command);                 
+        if (bytes > 0){ 
+         char * buf = strdup(strsep(&command,"\n"));
+         exec_command(buf);  
+         }            
     }
     return 0;
 }
