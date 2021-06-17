@@ -23,12 +23,16 @@ void transform_sucess(int signal) {
     send_used_command();
     kill(pid,SIGKILL);
 }
+void h_processing(int signal) {
+    write(1,"Processing...\n",strlen("Processing...\n"));
+}
 
 int main(int argc, char **argv) {
     //
     pid = getpid();
     signal(SIGUSR1,tranform_error);
     signal(SIGUSR2,transform_sucess);
+    signal(SIGINT,h_processing);
     if (argc < 2 && strcmp(argv[1], "status") && strcmp(argv[1], "transform")) {
         perror_invalid_args();
         return -1;

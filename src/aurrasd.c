@@ -2,6 +2,8 @@
 #include "utilities.h"
 #include <ctype.h>
 FILTERS fs;
+char **pending;
+int n_pending;
 char** divide_command(char* command) {
     char** params = malloc(sizeof(char*) * 16);
     // test if malloc failed
@@ -85,7 +87,7 @@ int exec_transform(char** args) {
 }
 int exec_command(char* command) {
     char** args = divide_command(command);
-    if (!args) return -1;
+    if (!args) return -2;
     if (!strcmp(command, "status")) {
         exec_status();
     } 
@@ -95,8 +97,9 @@ int exec_command(char* command) {
     else if (*args && !strcmp(args[1], "transform")) { 
         //ocupy filters
         if(!can_transform(fs,args+4)) return -1;
+        kill(args[0],SIGINT);
         for(int i = 4; args[i]; i++) ocup_filter(fs,args[i]);
-       
+        
         if(fork() == 0) {
             pid_t pid;
             if((pid = fork()) == 0) { 
@@ -118,7 +121,9 @@ int main(int argc, char** argv) {
 
     fs = fill_filters(argv[1]);
     if (fs == NULL) return -1;
-
+    n_pending = 0;
+    pending = malloc(sizeof(char *)*16);
+    for(int i = 0; i < 16; i++) pending[i] = NULL;
     int fifo_ret = mkfifo(SERVER_TO_CLIENT, 0666);
     if (fifo_ret == -1 && errno != EEXIST) {
         perror(SERVER_TO_CLIENT);
@@ -129,8 +134,8 @@ int main(int argc, char** argv) {
         int fd = open(CLIENT_TO_SERVER, O_RDONLY, 0666);
         char command[COMMAND_SIZE] = "";
         ssize_t bytes = read(fd, command, COMMAND_SIZE);
-        if (bytes > 0)
-            exec_command(command);
+        if (bytes > 0 && exec_command(command) == -1)
+            pending[n_pending++] = strdup(command);                 
     }
     return 0;
 }
