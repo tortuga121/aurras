@@ -11,7 +11,7 @@ void send_used_command() {
         return;
     }
     strcat(usedcommand,"\n");
-    int bytes = write(fd_write,usedcommand,strlen(usedcommand));
+    write(fd_write,usedcommand,strlen(usedcommand));
     close(fd_write);
 }
 void tranform_error(int signal) {
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     signal(SIGUSR2,transform_sucess);
     signal(SIGPOLL,h_processing);
     if (argc < 2 && strcmp(argv[1], "status") && strcmp(argv[1], "transform")) {
-        perror_invalid_args();
+        write(STDOUT_FILENO,"Invalid args!\n",strlen("Invalid args!\n"));
         return -1;
     }
     // if non existent creates fifo client to server

@@ -6,19 +6,19 @@ client: obj/aurras.o bin/aurras
 	./bin/aurras status
 
 
-bin/aurrasd: obj/aurrasd.o obj/utilities.o obj/filters.o
-	gcc -g $(INCLDS) obj/aurrasd.o obj/utilities.o obj/filters.o -o bin/aurrasd
+bin/aurrasd: obj/aurrasd.o obj/filters.o
+	gcc -g $(INCLDS) obj/aurrasd.o  obj/filters.o -o bin/aurrasd
 
 obj/aurrasd.o: src/aurrasd.c
 	gcc -Wall $(INCLDS) -g -c src/aurrasd.c -o obj/aurrasd.o
 
-bin/aurras: obj/aurras.o obj/utilities.o obj/filters.o
-	gcc -g $(INCLDS) obj/aurras.o obj/utilities.o obj/filters.o -o bin/aurras
+bin/aurras: obj/aurras.o  obj/filters.o
+	gcc -g $(INCLDS) obj/aurras.o  obj/filters.o -o bin/aurras
 
 obj/aurras.o: src/aurras.c
 	gcc -Wall $(INCLDS) -g -c src/aurras.c -o obj/aurras.o
 
-bin/filters: obj/filters.o obj/utilities.o
+bin/filters: obj/filters.o 
 	gcc -g $(INCLDS) obj/filters.o -o bin/filters
 
 obj/filters.o: src/filters.c
