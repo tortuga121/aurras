@@ -33,7 +33,12 @@ int exec_status() {
     }
     char* out = status(fs);
     write(fd, out, strlen(out));
+    //write filters status
     for(int i = 0; i< n_processing; i++) write(fd,processing[i], strlen(processing[i]));
+    //write pid
+    char pidstr[20] = "";
+    sprintf(pidstr,"pid: %d\n",getpid());
+    write(fd,pidstr,strlen(pidstr));
     close(fd);
     return 0;
 }
@@ -106,11 +111,12 @@ int exec_command(char* command) {
         // find pendings to start processing
         int i = 0;
         do { 
+            // find a pending task
             for(; i < n_pending; i++) { 
                 char ** args = divide_command(strdup(pending[i]));
                 if(can_transform(fs,args+4)) break;
             }
-           
+           // if found execute the task
             if(i < n_pending) { 
                 char* buf = strdup(pending[i]);
                 for(int j = i; j <= n_pending; j++) pending[i] = pending[i+1];
@@ -118,14 +124,13 @@ int exec_command(char* command) {
                 exec_command(buf);
             }
             
-        }while(i < n_pending);
+        }while(i < n_pending); // repeat to see if there are more possoble tasks
         return 0;
     }
     else if (*args && !strcmp(args[1], "transform")) { 
        //se if can transform otherwise add to pending list
         if(!can_transform(fs,args+4)){
             pending[n_pending++] = strdup(command); 
-            printf("PENDING %s\n", command);
             return -1;
         }
         // teel client that processing has started
@@ -147,13 +152,14 @@ int exec_command(char* command) {
             waitpid(pid,&status,0);
             // send signal to client with sucess transform or not
             if(WEXITSTATUS(status)) 
-                kill(atoi(args[0]),SIGUSR1);
-            else kill(atoi(args[0]),SIGUSR2);
+                kill(atoi(args[0]),SIGUSR1); // fail
+            else kill(atoi(args[0]),SIGUSR2); // success
             _exit(0);
         }
     }
     return 0;
 }
+
 int main(int argc, char** argv) {
     if (argc < 3) perror_invalid_args();
 
@@ -161,7 +167,9 @@ int main(int argc, char** argv) {
     if (fs == NULL) return -1;
     n_pending = 0;
     n_processing = 0;
-    for(int i = 0; i < 16; i++) {pending[i] = NULL; processing[i] = NULL;}
+    // init pendings and proocessings
+    for(int i = 0; i < 100; i++) {pending[i] = NULL; processing[i] = NULL;}
+    //create fifo
     int fifo_ret = mkfifo(SERVER_TO_CLIENT, 0666);
     if (fifo_ret == -1 && errno != EEXIST) {
         perror(SERVER_TO_CLIENT);
@@ -175,7 +183,7 @@ int main(int argc, char** argv) {
         if (bytes > 0){ 
          char * buf = strdup(strsep(&command,"\n"));
          exec_command(buf);  
-         }            
+        }            
     }
     return 0;
 }

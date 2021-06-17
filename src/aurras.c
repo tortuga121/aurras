@@ -15,12 +15,12 @@ void send_used_command() {
     close(fd_write);
 }
 void tranform_error(int signal) {
-    write(1,"transform failed\n",strlen("transform failed\n"));
+    write(1,"Transform failed!\n",strlen("transform failed\n"));
     send_used_command();
     kill(pid,SIGKILL);
 }
 void transform_sucess(int signal) {
-    write(1,"done\n",strlen("done\n"));
+    write(1,"Done!\n",strlen("done\n"));
     send_used_command();
     kill(pid,SIGKILL);
 }
@@ -78,6 +78,7 @@ int main(int argc, char **argv) {
         // write command to server
         write(fd_write,command,strlen(command));
         close(fd_write);
+        write(1,"Pending...\n",strlen("Pending...\n"));
         pause();
 
     }
