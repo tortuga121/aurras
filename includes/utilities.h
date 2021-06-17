@@ -10,7 +10,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
-#include "utilities.h"
 
 #include <stdio.h>
 #define LINE_SIZE 1024
@@ -19,9 +18,6 @@
 #define MAX_ARGS 16
 #define SERVER_TO_CLIENT "tmp/server_to_client_fifo"
 #define CLIENT_TO_SERVER "tmp/client_to_server_fifo"
-
-ssize_t readln(int fd, char *line, size_t size);
-
-void perror_invalid_args();
+#define TASKS_SIZE 1024
 
 #endif

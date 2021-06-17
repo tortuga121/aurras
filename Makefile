@@ -18,12 +18,6 @@ bin/aurras: obj/aurras.o obj/utilities.o obj/filters.o
 obj/aurras.o: src/aurras.c
 	gcc -Wall $(INCLDS) -g -c src/aurras.c -o obj/aurras.o
 
-bin/utilities: obj/utilities.o
-	gcc -g $(INCLDS) obj/utilities.o -o bin/utilities
-
-obj/utilities.o: src/utilities.c
-	gcc -Wall $(INCLDS) -g -c src/utilities.c -o obj/utilities.o
-
 bin/filters: obj/filters.o obj/utilities.o
 	gcc -g $(INCLDS) obj/filters.o -o bin/filters
 
